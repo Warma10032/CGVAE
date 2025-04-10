@@ -395,8 +395,6 @@ class Graph(ABC):
                   max_tries: int = 3, 
                   max_time: int = 600,
                   fixed_group: Optional[str] = None) -> List[Any]:
-        # inputs:{'task':"xxx"}
-        group_name = random.choice(list(self._cached_feature_groups.keys()))
         
         if self.allow_random_combination:
             group_name = random.choice(list(self._cached_feature_groups.keys()))

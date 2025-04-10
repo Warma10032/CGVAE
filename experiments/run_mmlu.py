@@ -51,7 +51,7 @@ def parse_args():
                         help="Number of optimization/inference rounds for one query")
     parser.add_argument('--pruning_rate', type=float, default=0.25,
                         help="The Rate of Pruning. Default 0.05.")
-    parser.add_argument('--llm_name', type=str, default="GPT-4o-mini",
+    parser.add_argument('--llm_name', type=str, default="gpt-4o-mini",
                         help="Model name, None runs the default ChatGPT4")
     parser.add_argument('--domain', type=str, default="mmlu",
                         help="Domain (the same as dataset name), default 'MMLU'")
@@ -61,8 +61,8 @@ def parse_args():
     parser.add_argument('--optimized_temporal',action='store_true')
     parser.add_argument('--node_config_file', type=str,default='.\GDesigner\config\mmlu_node_config.json',
                     help="Path to JSON file containing node configurations.")
-    parser.add_argument("--phase", choices=["train", "eval"], required=True)
-    parser.add_argument("--eval_group", type=str, default="group_2", help="评估阶段用的固定组合名")
+    parser.add_argument("--phase", choices=["train", "eval", "test"], required=True)
+    parser.add_argument("--eval_group", type=str, default="train_group", help="评估阶段用的固定组合名")
 
     args = parser.parse_args()
     result_path = GDesigner_ROOT / "result"
@@ -120,29 +120,28 @@ class Tee:
 
 async def main():
     args = parse_args()
-    
-    # 修改日志文件扩展名为.log
+
     log_dir = GDesigner_ROOT / "result" / "mmlu"
     log_dir.mkdir(exist_ok=True)
-    log_file = log_dir / f"mmlu_{args.phase}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    log_file = log_dir / f"mmlu_{args.phase}_{args.eval_group}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     
     # 保持上下文管理器使用方式不变
     with ConsoleLogger(str(log_file)) as logger:
+        print(args)
         mode = args.mode
         decision_method = args.decision_method
         agent_names = [name for name,num in zip(args.agent_names,args.agent_nums) for _ in range(num)]
         kwargs = get_kwargs(mode,len(agent_names))
-        node_config = get_node_config(args.node_config_file,len(agent_names))
 
         limit_questions = 153
         node_config = get_node_config(args.node_config_file,len(agent_names))
         
     
         download()
-        dataset_train = MMLUDataset('dev')
-        dataset_val = MMLUDataset('val')
+
         
         if args.phase == "train":
+            dataset_train = MMLUDataset('dev')
             graph = Graph(domain=args.domain,
                     llm_name=args.llm_name,
                     agent_names=agent_names,
@@ -150,12 +149,12 @@ async def main():
                     optimized_spatial=args.optimized_spatial,
                     optimized_temporal=args.optimized_temporal,
                     node_kwargs=node_config,
-                    allow_random_combination=True,
+                    allow_random_combination=False,
                     **kwargs)
             await train(graph=graph,dataset=dataset_train,num_iters=args.num_iterations,num_rounds=args.num_rounds,
-                        lr=args.lr,batch_size=args.batch_size)
-            
-        if args.phase == "eval":
+                        lr=args.lr,batch_size=args.batch_size,eval_group=args.eval_group)            
+        elif args.phase == "eval":
+            dataset_val = MMLUDataset('val')
             graph = Graph(domain=args.domain,
                     llm_name=args.llm_name,
                     agent_names=agent_names,

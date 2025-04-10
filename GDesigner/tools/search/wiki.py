@@ -44,8 +44,7 @@ class WikiSearch(Search):
 
     async def search_wiki(self,query):
         wikipedia.set_lang("en")
-        result = wikipedia.search(query, results=2, suggestion=True)
-        print(result)
+        result = wikipedia.search(query, results=1, suggestion=True)
         ret = ""
         tasks = []
         

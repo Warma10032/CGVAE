@@ -32,6 +32,7 @@ class AnalyzeAgent(Node):
             if self.role == 'Searcher' and info['role']=='Knowlegable Expert' and self.external_tool_type == 'Search':
                 queries = find_strings_between_pluses(info['output'])
                 search_engine = SearchRegistry.get(self.external_tool)
+                print(f"{self.external_tool} {self.external_source} {queries}")
                 search = await search_engine.search_batch(queries=queries, site=self.external_source)
                 if len(search):
                     self.search_summary = ".\n".join(search)

@@ -13,7 +13,6 @@ from GDesigner.utils.globals import Cost, PromptTokens, CompletionTokens
 import torch
 from GDesigner.utils.const import GDesigner_ROOT
 
-
 async def evaluate(
         graph:Graph,
         dataset,
@@ -30,7 +29,7 @@ async def evaluate(
     graph.feature_fusion.eval()
 
         
-    model_path = f"{GDesigner_ROOT}/model_weights/mmlu/trained_gcn.pt"
+    model_path = f"{GDesigner_ROOT}/model_weights/mmlu/trained_gcn_20250410_200221_0.788_chain_30_source.pt"
     checkpoint = torch.load(model_path)
     graph.gcn.load_state_dict(checkpoint["gcn"])
     graph.gcn_dynamic.load_state_dict(checkpoint["gcn_dynamic"])

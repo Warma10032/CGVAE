@@ -20,6 +20,7 @@ async def train(graph:Graph,
             num_rounds:int=1,
             lr:float=0.1,
             batch_size:int = 4,
+            eval_group:str = None,
           ) -> None:
     
     def infinite_data_loader() -> Iterator[pd.DataFrame]:
@@ -49,7 +50,11 @@ async def train(graph:Graph,
             realized_graph.mlp = graph.mlp
             input_dict = dataset.record_to_input(record)
             print(input_dict)
-            answer_log_probs.append(asyncio.create_task(realized_graph.arun(input_dict,num_rounds)))
+            if eval_group == "cycle":
+                fixed_group = f"group_{i_record + 4}"
+            else:
+                fixed_group = None
+            answer_log_probs.append(asyncio.create_task(realized_graph.arun(input_dict,num_rounds,fixed_group=fixed_group)))
             correct_answer = dataset.record_to_target_answer(record)
             correct_answers.append(correct_answer)
         
